@@ -431,6 +431,147 @@ psql -d versys -U marcus
 
 ## RESTfull сервіс для управління даними
 
--asdfas
--asdfvvvxz
--lkjjfdjsn
+### Створення серверу
+
+```js
+"use strict";
+
+const express = require("express");
+const projectRouter = require("./routes/project.router");
+
+const PORT = 3333;
+
+const app = express();
+
+app.use(express.json());
+app.use("/api", projectRouter);
+
+app.listen(PORT, () => {
+  console.log(`Server is listening on the port ${PORT}`);
+});
+```
+
+### Підключення до бази даних
+
+```js
+'use strict';
+
+const Pool = require("pg").Pool;
+const pool = new Pool({
+  user: "postgres",
+  password: "1111",
+  host: "localhost",
+  port: 5432,
+  database: "versys_db"
+});
+
+module.exports = pool;
+```
+
+### Контроллер обробки запитів
+
+```js
+const db = require("../db");
+
+class projectController {
+  async createProject(req, res) {
+    const { id, title, status, start_date } = req.body;
+    try {
+      const project = await db.query(
+        "INSERT INTO projects (id, title, status, start_date) values ($1, $2, $3, $4) RETURNING *",
+        [id, title, status, start_date]
+      );
+      await res.json(project.rows[0]);
+    } catch (err) {
+      projectController.handleError(err, res);
+    }
+  }
+
+  async getProjects(req, res) {
+    try {
+      const project = await db.query("SELECT * FROM projects");
+      res.json(project.rows);
+    } catch (err) {
+      projectController.handleError(err, res);
+    }
+  }
+
+  async getProjectById(req, res) {
+    const id = req.params.id;
+    try {
+      const project = await db.query("SELECT * FROM projects WHERE id = $1", [
+        id,
+      ]);
+
+      if (!project.rows.length) throw new Error("Record is not found");
+
+      res.json(project.rows[0]);
+    } catch (err) {
+      projectController.handleError(err, res);
+    }
+  }
+
+  async updateProject(req, res) {
+    const id = req.params.id;
+    const data = req.body;
+
+    if (data.id) delete data.id;
+
+    try {
+      for (const [key, value] of Object.entries(data)) {
+        await db.query(`UPDATE projects SET ${key} = $1 WHERE id = $2`, [
+          value,
+          id,
+        ]);
+      }
+
+      const project = await db.query("SELECT * FROM projects WHERE id = $1", [
+        id,
+      ]);
+
+      res.json(project.rows[0]);
+    } catch (err) {
+      projectController.handleError(err, res);
+    }
+  }
+
+  async deleteProject(req, res) {
+    const id = req.params.id;
+    try {
+      const project = await db.query("SELECT * FROM projects WHERE id = $1", [
+        id,
+      ]);
+
+      if (!project.rows.length) throw new Error("Record is not found");
+
+      await db.query("DELETE FROM projects WHERE id = $1", [id]);
+      res.json(project.rows[0]);
+    } catch (err) {
+      projectController.handleError(err, res);
+    }
+  }
+
+  static handleError(err, res) {
+    const errorMessage = err.message;
+    console.log("Error: " + errorMessage);
+    res.status(404).json({ errorMessage });
+  }
+}
+
+module.exports = new projectController();
+```
+### Routes для обробки запитів
+
+```js
+const Router = require("express");
+const router = new Router();
+const projectController = require("../controllers/project.controller");
+
+router.post("/project", projectController.createProject);
+router.get("/project", projectController.getProjects);
+router.get("/project/:id", projectController.getProjectById);
+router.patch("/project/:id", projectController.updateProject);
+router.delete("/project/:id", projectController.deleteProject);
+
+module.exports = router;
+```
