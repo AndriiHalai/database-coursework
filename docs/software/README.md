@@ -473,7 +473,7 @@ module.exports = pool;
 ```js
 const db = require("../db");
 
-class projectController {
+class ProjectController {
   async createProject(req, res) {
     const { id, title, status, start_date } = req.body;
     try {
@@ -483,7 +483,7 @@ class projectController {
       );
       await res.json(project.rows[0]);
     } catch (err) {
-      projectController.handleError(err, res);
+      ProjectController.handleError(err, res);
     }
   }
 
@@ -492,7 +492,7 @@ class projectController {
       const project = await db.query("SELECT * FROM projects");
       res.json(project.rows);
     } catch (err) {
-      projectController.handleError(err, res);
+      ProjectController.handleError(err, res);
     }
   }
 
@@ -507,7 +507,7 @@ class projectController {
 
       res.json(project.rows[0]);
     } catch (err) {
-      projectController.handleError(err, res);
+      ProjectController.handleError(err, res);
     }
   }
 
@@ -531,7 +531,7 @@ class projectController {
 
       res.json(project.rows[0]);
     } catch (err) {
-      projectController.handleError(err, res);
+      ProjectController.handleError(err, res);
     }
   }
 
@@ -547,7 +547,7 @@ class projectController {
       await db.query("DELETE FROM projects WHERE id = $1", [id]);
       res.json(project.rows[0]);
     } catch (err) {
-      projectController.handleError(err, res);
+      ProjectController.handleError(err, res);
     }
   }
 
@@ -558,7 +558,7 @@ class projectController {
   }
 }
 
-module.exports = new projectController();
+module.exports = new ProjectController();
 ```
 ### Routes для обробки запитів
 
